@@ -1,0 +1,122 @@
+import ClerkKit
+import Foundation
+import OSLog
+
+@MainActor
+public enum AccountAVClerk {
+    public static func configureIfPossible(publishableKey: String) {
+        let trimmedKey = publishableKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedKey.isEmpty else { return }
+        Clerk.configure(publishableKey: trimmedKey)
+    }
+}
+
+@MainActor
+public struct ClerkAccountAVService: AccountAVService {
+    private let publishableKeyProvider: () -> String
+    private let fallbackDisplayName: String
+    private let authLogger: Logger
+
+    public init(
+        publishableKeyProvider: @escaping () -> String,
+        fallbackDisplayName: String,
+        loggerSubsystem: String = "com.avalsys.accountav"
+    ) {
+        self.publishableKeyProvider = publishableKeyProvider
+        self.fallbackDisplayName = fallbackDisplayName
+        self.authLogger = Logger(subsystem: loggerSubsystem, category: "auth")
+    }
+
+    public var isAvailable: Bool {
+        !publishableKeyProvider().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    public var currentUser: AccountAVUser? {
+        guard isAvailable, let user = Clerk.shared.user else { return nil }
+        let displayName = [user.firstName, user.lastName]
+            .compactMap { value in
+                guard let value, !value.isEmpty else { return nil }
+                return value
+            }
+            .joined(separator: " ")
+
+        return AccountAVUser(
+            id: user.id,
+            displayName: displayName.isEmpty ? fallbackDisplayName : displayName,
+            emailAddress: user.primaryEmailAddress?.emailAddress
+        )
+    }
+
+    public func getToken() async throws -> String? {
+        guard isAvailable, let session = Clerk.shared.session else { return nil }
+        return try await session.getToken()
+    }
+
+    public func signInWithApple() async throws {
+        guard isAvailable else { throw AccountAVError.unavailable }
+        try await ensureClerkIsReady()
+        authLogger.info("Starting Apple sign-in")
+        let result = try await Clerk.shared.auth.signInWithApple()
+        authLogger.info("Apple sign-in returned transfer result")
+        try await activateSession(from: result)
+    }
+
+    public func signInWithGoogle() async throws {
+        guard isAvailable else { throw AccountAVError.unavailable }
+        try await ensureClerkIsReady()
+        authLogger.info("Starting Google sign-in")
+        let result = try await Clerk.shared.auth.signUpWithOAuth(provider: .google)
+        authLogger.info("Google sign-in returned transfer result")
+        try await activateSession(from: result)
+    }
+
+    public func signOut() async throws {
+        guard isAvailable else { return }
+        try await Clerk.shared.auth.signOut()
+    }
+
+    private func activateSession(from result: TransferFlowResult) async throws {
+        let createdSessionId: String?
+        let statusDescription: String
+
+        switch result {
+        case .signIn(let signIn):
+            createdSessionId = signIn.createdSessionId
+            statusDescription = String(describing: signIn.status)
+        case .signUp(let signUp):
+            createdSessionId = signUp.createdSessionId
+            statusDescription = String(describing: signUp.status)
+        }
+
+        authLogger.info("Transfer flow status: \(statusDescription, privacy: .public)")
+
+        if Clerk.shared.session != nil {
+            authLogger.info("Clerk session already active after transfer flow")
+            return
+        }
+
+        _ = try? await Clerk.shared.refreshClient()
+        if Clerk.shared.session != nil {
+            authLogger.info("Clerk session active after client refresh")
+            return
+        }
+
+        guard let createdSessionId, !createdSessionId.isEmpty else {
+            authLogger.error("Transfer flow finished without a created session id")
+            throw AccountAVError.missingSession
+        }
+
+        authLogger.info("Activating Clerk session")
+        try await Clerk.shared.auth.setActive(sessionId: createdSessionId)
+        _ = try? await Clerk.shared.refreshClient()
+        authLogger.info("Clerk session activated")
+    }
+
+    private func ensureClerkIsReady() async throws {
+        guard !Clerk.shared.isLoaded else { return }
+        authLogger.info("Refreshing Clerk client before sign-in")
+        async let environment = Clerk.shared.refreshEnvironment()
+        async let client = Clerk.shared.refreshClient()
+        _ = try await (environment, client)
+    }
+}
