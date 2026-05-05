@@ -1,6 +1,6 @@
 # Account AV
 
-Shared Swift package for AV Account authentication in AV apps.
+Shared Swift package for Account AV authentication in AV apps.
 
 `AccountAV` wraps the Clerk native SDK behind a small app-facing API used by Tune AV, Series AV, and future AV apps. It centralizes the account flow so each app can keep its own product logic, branding, and access rules while sharing the same sign-in behavior.
 
@@ -41,7 +41,7 @@ Create a service:
 ```swift
 let accountService = ClerkAccountAVService(
     publishableKeyProvider: { publishableKey },
-    fallbackDisplayName: "AV Account user",
+    fallbackDisplayName: "Account AV user",
     loggerSubsystem: "com.example.app"
 )
 ```

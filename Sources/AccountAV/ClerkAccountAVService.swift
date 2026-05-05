@@ -48,8 +48,26 @@ public struct ClerkAccountAVService: AccountAVService {
     }
 
     public func getToken() async throws -> String? {
-        guard isAvailable, let session = Clerk.shared.session else { return nil }
-        return try await session.getToken()
+        guard isAvailable else { return nil }
+
+        if let token = try await activeSessionToken(), !token.isEmpty {
+            return token
+        }
+
+        try await ensureClerkIsReady()
+        if let token = try await activeSessionToken(), !token.isEmpty {
+            return token
+        }
+
+        guard let fallbackSession = Clerk.shared.auth.sessions.first else {
+            authLogger.error("Unable to find an active Clerk session")
+            return nil
+        }
+
+        authLogger.info("Activating persisted Clerk session before requesting token")
+        try await Clerk.shared.auth.setActive(sessionId: fallbackSession.id)
+        _ = try? await Clerk.shared.refreshClient()
+        return try await activeSessionToken()
     }
 
     public func signInWithApple() async throws {
@@ -118,5 +136,9 @@ public struct ClerkAccountAVService: AccountAVService {
         async let environment = Clerk.shared.refreshEnvironment()
         async let client = Clerk.shared.refreshClient()
         _ = try await (environment, client)
+    }
+
+    private func activeSessionToken() async throws -> String? {
+        try await Clerk.shared.session?.getToken(.init(skipCache: true))
     }
 }
