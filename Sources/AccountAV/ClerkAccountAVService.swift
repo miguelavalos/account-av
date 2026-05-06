@@ -83,7 +83,7 @@ public struct ClerkAccountAVService: AccountAVService {
         guard isAvailable else { throw AccountAVError.unavailable }
         try await ensureClerkIsReady()
         authLogger.info("Starting Google sign-in")
-        let result = try await Clerk.shared.auth.signUpWithOAuth(provider: .google)
+        let result = try await Clerk.shared.auth.signInWithOAuth(provider: .google)
         authLogger.info("Google sign-in returned transfer result")
         try await activateSession(from: result)
     }
