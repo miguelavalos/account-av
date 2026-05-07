@@ -4,10 +4,26 @@ import OSLog
 
 @MainActor
 public enum AccountAVClerk {
-    public static func configureIfPossible(publishableKey: String) {
+    public static func configureIfPossible(
+        publishableKey: String,
+        bundleIdentifier: String? = nil,
+        keychainAccessGroup: String? = nil
+    ) {
         let trimmedKey = publishableKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedKey.isEmpty else { return }
-        Clerk.configure(publishableKey: trimmedKey)
+
+        let resolvedBundleIdentifier = bundleIdentifier ?? Bundle.main.bundleIdentifier ?? ""
+        let options = Clerk.Options(
+            keychainConfig: .init(
+                service: resolvedBundleIdentifier,
+                accessGroup: keychainAccessGroup
+            ),
+            redirectConfig: .init(
+                redirectUrl: "\(resolvedBundleIdentifier)://callback",
+                callbackUrlScheme: resolvedBundleIdentifier
+            )
+        )
+        Clerk.configure(publishableKey: trimmedKey, options: options)
     }
 }
 
@@ -74,7 +90,7 @@ public struct ClerkAccountAVService: AccountAVService {
         guard isAvailable else { throw AccountAVError.unavailable }
         try await ensureClerkIsReady()
         authLogger.info("Starting Apple sign-in")
-        let result = try await Clerk.shared.auth.signInWithApple()
+        let result = try await Clerk.shared.auth.signInWithOAuth(provider: .apple)
         authLogger.info("Apple sign-in returned transfer result")
         try await activateSession(from: result)
     }
@@ -108,25 +124,20 @@ public struct ClerkAccountAVService: AccountAVService {
 
         authLogger.info("Transfer flow status: \(statusDescription, privacy: .public)")
 
-        if Clerk.shared.session != nil {
-            authLogger.info("Clerk session already active after transfer flow")
-            return
-        }
-
-        _ = try? await Clerk.shared.refreshClient()
-        if Clerk.shared.session != nil {
-            authLogger.info("Clerk session active after client refresh")
-            return
-        }
-
         guard let createdSessionId, !createdSessionId.isEmpty else {
+            _ = try? await Clerk.shared.refreshClient()
+            if Clerk.shared.session != nil {
+                authLogger.info("Clerk session active after client refresh")
+                return
+            }
+
             authLogger.error("Transfer flow finished without a created session id")
             throw AccountAVError.missingSession
         }
 
         authLogger.info("Activating Clerk session")
         try await Clerk.shared.auth.setActive(sessionId: createdSessionId)
-        _ = try? await Clerk.shared.refreshClient()
+        try await Clerk.shared.refreshClient()
         authLogger.info("Clerk session activated")
     }
 
