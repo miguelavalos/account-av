@@ -90,7 +90,11 @@ public struct ClerkAccountAVService: AccountAVService {
         guard isAvailable else { throw AccountAVError.unavailable }
         try await ensureClerkIsReady()
         authLogger.info("Starting Apple sign-in")
+        #if os(iOS)
+        let result = try await Clerk.shared.auth.signInWithApple()
+        #else
         let result = try await Clerk.shared.auth.signInWithOAuth(provider: .apple)
+        #endif
         authLogger.info("Apple sign-in returned transfer result")
         try await activateSession(from: result)
     }
