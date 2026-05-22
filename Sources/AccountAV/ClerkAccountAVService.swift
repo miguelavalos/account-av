@@ -76,7 +76,7 @@ public struct ClerkAccountAVService: AccountAVService {
         }
 
         guard let fallbackSession = Clerk.shared.auth.sessions.first else {
-            authLogger.error("Unable to find an active Clerk session")
+            authLogger.debug("No active Clerk session available")
             return nil
         }
 
