@@ -4,11 +4,15 @@ import OSLog
 
 @MainActor
 public enum AccountAVClerk {
+    public private(set) static var isConfigured = false
+
     public static func configureIfPossible(
         publishableKey: String,
         bundleIdentifier: String? = nil,
         keychainAccessGroup: String? = nil
     ) {
+        guard !isConfigured else { return }
+
         let trimmedKey = publishableKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedKey.isEmpty else { return }
 
@@ -24,6 +28,7 @@ public enum AccountAVClerk {
             )
         )
         Clerk.configure(publishableKey: trimmedKey, options: options)
+        isConfigured = true
     }
 }
 
@@ -48,6 +53,7 @@ public struct ClerkAccountAVService: AccountAVService {
     }
 
     public var currentUser: AccountAVUser? {
+        guard AccountAVClerk.isConfigured else { return nil }
         guard isAvailable, let user = Clerk.shared.user else { return nil }
         let displayName = [user.firstName, user.lastName]
             .compactMap { value in
@@ -65,6 +71,7 @@ public struct ClerkAccountAVService: AccountAVService {
 
     public func getToken() async throws -> String? {
         guard isAvailable else { return nil }
+        ensureClerkIsConfigured()
 
         if let token = try await activeSessionToken(), !token.isEmpty {
             return token
@@ -88,6 +95,7 @@ public struct ClerkAccountAVService: AccountAVService {
 
     public func signInWithApple() async throws {
         guard isAvailable else { throw AccountAVError.unavailable }
+        ensureClerkIsConfigured()
         try await ensureClerkIsReady()
         authLogger.info("Starting Apple sign-in")
         #if os(iOS)
@@ -101,6 +109,7 @@ public struct ClerkAccountAVService: AccountAVService {
 
     public func signInWithGoogle() async throws {
         guard isAvailable else { throw AccountAVError.unavailable }
+        ensureClerkIsConfigured()
         try await ensureClerkIsReady()
         authLogger.info("Starting Google sign-in")
         let result = try await Clerk.shared.auth.signInWithOAuth(provider: .google)
@@ -110,7 +119,15 @@ public struct ClerkAccountAVService: AccountAVService {
 
     public func signOut() async throws {
         guard isAvailable else { return }
+        guard AccountAVClerk.isConfigured else { return }
         try await Clerk.shared.auth.signOut()
+    }
+
+    private func ensureClerkIsConfigured() {
+        AccountAVClerk.configureIfPossible(
+            publishableKey: publishableKeyProvider(),
+            bundleIdentifier: Bundle.main.bundleIdentifier
+        )
     }
 
     private func activateSession(from result: TransferFlowResult) async throws {
