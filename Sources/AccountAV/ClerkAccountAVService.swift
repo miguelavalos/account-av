@@ -52,7 +52,7 @@ public struct ClerkAccountAVService: AccountAVService {
         !publishableKeyProvider().trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    public var currentUser: AccountAVUser? {
+    public var providerSessionUser: AccountAVUser? {
         guard AccountAVClerk.isConfigured else { return nil }
         guard isAvailable, let user = Clerk.shared.user else { return nil }
         return accountUser(from: user)
@@ -64,24 +64,24 @@ public struct ClerkAccountAVService: AccountAVService {
 
         do {
             if let token = try await activeSessionToken(), !token.isEmpty {
-                return currentUser.map(AccountAVSessionRestoreResult.active) ?? .signedOut
+                return providerSessionUser.map(AccountAVSessionRestoreResult.active) ?? .signedOut
             }
         } catch {
-            return .temporarilyUnavailable(currentUser)
+            return .temporarilyUnavailable(providerSessionUser)
         }
 
         do {
             try await ensureClerkIsReady()
         } catch {
-            return .temporarilyUnavailable(currentUser)
+            return .temporarilyUnavailable(providerSessionUser)
         }
 
         do {
             if let token = try await activeSessionToken(), !token.isEmpty {
-                return currentUser.map(AccountAVSessionRestoreResult.active) ?? .signedOut
+                return providerSessionUser.map(AccountAVSessionRestoreResult.active) ?? .signedOut
             }
         } catch {
-            return .temporarilyUnavailable(currentUser)
+            return .temporarilyUnavailable(providerSessionUser)
         }
 
         guard let fallbackSession = Clerk.shared.auth.sessions.first else {
@@ -94,11 +94,11 @@ public struct ClerkAccountAVService: AccountAVService {
             try await Clerk.shared.auth.setActive(sessionId: fallbackSession.id)
             _ = try? await Clerk.shared.refreshClient()
             if let token = try await activeSessionToken(), !token.isEmpty {
-                return currentUser.map(AccountAVSessionRestoreResult.active) ?? .signedOut
+                return providerSessionUser.map(AccountAVSessionRestoreResult.active) ?? .signedOut
             }
-            return .temporarilyUnavailable(currentUser)
+            return .temporarilyUnavailable(providerSessionUser)
         } catch {
-            return .temporarilyUnavailable(currentUser)
+            return .temporarilyUnavailable(providerSessionUser)
         }
     }
 

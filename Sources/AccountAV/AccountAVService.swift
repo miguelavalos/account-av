@@ -3,7 +3,7 @@ import Foundation
 @MainActor
 public protocol AccountAVService {
     var isAvailable: Bool { get }
-    var currentUser: AccountAVUser? { get }
+    var providerSessionUser: AccountAVUser? { get }
 
     func restoreSession() async -> AccountAVSessionRestoreResult
     func getToken() async throws -> String?
@@ -14,7 +14,7 @@ public protocol AccountAVService {
 
 public extension AccountAVService {
     func restoreSession() async -> AccountAVSessionRestoreResult {
-        guard let user = currentUser else { return .signedOut }
+        guard let user = providerSessionUser else { return .signedOut }
         do {
             guard let token = try await getToken(), !token.isEmpty else {
                 return .temporarilyUnavailable(user)

@@ -10,7 +10,7 @@ Shared Swift package for Account AV authentication in AV apps.
 - Sign in with Apple
 - Continue with Google through an OAuth flow that supports both sign-in and sign-up
 - Defensive session activation and client refresh after native authentication
-- Current user mapping through `AccountAVUser`
+- Provider session user mapping through `AccountAVUser`
 - Session token retrieval
 - Sign out
 
@@ -69,9 +69,21 @@ try await accountService.signOut()
 
 Product apps must treat Clerk as an Account AV implementation detail. App code
 should depend on an app-local account service protocol with provider-neutral
-operations such as `currentUser`, `getToken()`, `signInWithApple()`,
+operations such as `providerSessionUser`, `getToken()`, `signInWithApple()`,
 `signInWithGoogle()`, and `signOut()`. The default implementation should wrap
 `ClerkAccountAVService`.
+
+`ClerkAccountAVService.providerSessionUser` is provider session metadata. Its `id` is
+the provider subject, not the canonical Apps AV user id. Product apps must not
+use that id for ownership, credits, subscriptions, Convex documents, D1 rows, R2
+keys, or analytics.
+
+The canonical native identity flow is:
+
+1. Use Account AV to sign in and obtain a provider token.
+2. Call the platform API `/v1/me` with that token.
+3. Publish and cache only the returned internal Apps AV user id.
+4. If `/v1/me` fails, do not fall back to the provider subject.
 
 Use the same launch and runtime pattern in every AV app:
 
@@ -81,8 +93,9 @@ Use the same launch and runtime pattern in every AV app:
   `<bundle-id>://callback`;
 - register the callback URL scheme as `$(PRODUCT_BUNDLE_IDENTIFIER)`;
 - keep Sign in with Apple and Keychain entitlements aligned with the bundle id;
-- after OAuth, read `currentUser`, call `getToken()` if needed, then read
-  `currentUser` again before resolving local account state;
+- after OAuth, read `providerSessionUser` only as provider session evidence, call
+  `getToken()`, resolve `/v1/me`, then update local account state with the
+  returned internal user;
 - clear app-local account, entitlement, and credit state on sign-out.
 
 Product apps should not call Clerk APIs directly, duplicate Account AV buttons,
