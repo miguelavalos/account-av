@@ -55,6 +55,54 @@ public struct ClerkAccountAVService: AccountAVService {
     public var currentUser: AccountAVUser? {
         guard AccountAVClerk.isConfigured else { return nil }
         guard isAvailable, let user = Clerk.shared.user else { return nil }
+        return accountUser(from: user)
+    }
+
+    public func restoreSession() async -> AccountAVSessionRestoreResult {
+        guard isAvailable else { return .signedOut }
+        ensureClerkIsConfigured()
+
+        do {
+            if let token = try await activeSessionToken(), !token.isEmpty {
+                return currentUser.map(AccountAVSessionRestoreResult.active) ?? .signedOut
+            }
+        } catch {
+            return .temporarilyUnavailable(currentUser)
+        }
+
+        do {
+            try await ensureClerkIsReady()
+        } catch {
+            return .temporarilyUnavailable(currentUser)
+        }
+
+        do {
+            if let token = try await activeSessionToken(), !token.isEmpty {
+                return currentUser.map(AccountAVSessionRestoreResult.active) ?? .signedOut
+            }
+        } catch {
+            return .temporarilyUnavailable(currentUser)
+        }
+
+        guard let fallbackSession = Clerk.shared.auth.sessions.first else {
+            authLogger.debug("No persisted Clerk session available during restore")
+            return .signedOut
+        }
+
+        do {
+            authLogger.info("Activating persisted Clerk session during restore")
+            try await Clerk.shared.auth.setActive(sessionId: fallbackSession.id)
+            _ = try? await Clerk.shared.refreshClient()
+            if let token = try await activeSessionToken(), !token.isEmpty {
+                return currentUser.map(AccountAVSessionRestoreResult.active) ?? .signedOut
+            }
+            return .temporarilyUnavailable(currentUser)
+        } catch {
+            return .temporarilyUnavailable(currentUser)
+        }
+    }
+
+    private func accountUser(from user: User) -> AccountAVUser {
         let displayName = [user.firstName, user.lastName]
             .compactMap { value in
                 guard let value, !value.isEmpty else { return nil }
