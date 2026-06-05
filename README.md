@@ -4,6 +4,10 @@ Shared Swift package for Account AV authentication in AV apps.
 
 `AccountAV` wraps the Clerk native SDK behind a small app-facing API used by Tune AV, Series AV, and future AV apps. It centralizes the account flow so each app can keep its own product logic, branding, and access rules while sharing the same sign-in behavior.
 
+Before validating signed native account workflows, read [AGENTS.md](AGENTS.md).
+Those workflows are governed by private AVALSYS runbooks, and product apps must
+resolve backend-owned identity through the internal Apps AV account contract.
+
 ## Features
 
 - Clerk configuration helper
