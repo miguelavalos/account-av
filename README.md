@@ -80,7 +80,7 @@ operations such as `providerSessionUser`, `getToken()`, `signInWithApple()`,
 `ClerkAccountAVService.providerSessionUser` is provider session metadata. Its `id` is
 the provider subject, not the canonical Apps AV user id. Product apps must not
 use that id for ownership, credits, subscriptions, Convex documents, D1 rows, R2
-keys, or analytics.
+keys, purchase SDK customer ids, or analytics.
 
 The canonical native identity flow is:
 
