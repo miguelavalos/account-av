@@ -226,6 +226,6 @@ public struct ClerkAccountAVService: AccountAVService {
     }
 
     private func activeSessionToken() async throws -> String? {
-        try await Clerk.shared.session?.getToken(.init(skipCache: true))
+        try await Clerk.shared.session?.getToken()
     }
 }
