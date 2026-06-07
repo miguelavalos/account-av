@@ -9,6 +9,7 @@ public enum AccountAVClerk {
     public static func configureIfPossible(
         publishableKey: String,
         bundleIdentifier: String? = nil,
+        keychainService: String? = nil,
         keychainAccessGroup: String? = nil
     ) {
         guard !isConfigured else { return }
@@ -17,9 +18,11 @@ public enum AccountAVClerk {
         guard !trimmedKey.isEmpty else { return }
 
         let resolvedBundleIdentifier = bundleIdentifier ?? Bundle.main.bundleIdentifier ?? ""
+        let trimmedKeychainService = keychainService?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let resolvedKeychainService = trimmedKeychainService.isEmpty ? resolvedBundleIdentifier : trimmedKeychainService
         let options = Clerk.Options(
             keychainConfig: .init(
-                service: resolvedBundleIdentifier,
+                service: resolvedKeychainService,
                 accessGroup: keychainAccessGroup
             ),
             redirectConfig: .init(
@@ -35,15 +38,18 @@ public enum AccountAVClerk {
 @MainActor
 public struct ClerkAccountAVService: AccountAVService {
     private let publishableKeyProvider: () -> String
+    private let keychainServiceProvider: () -> String?
     private let fallbackDisplayName: String
     private let authLogger: Logger
 
     public init(
         publishableKeyProvider: @escaping () -> String,
+        keychainServiceProvider: @escaping () -> String? = { nil },
         fallbackDisplayName: String,
         loggerSubsystem: String = "com.avalsys.accountav"
     ) {
         self.publishableKeyProvider = publishableKeyProvider
+        self.keychainServiceProvider = keychainServiceProvider
         self.fallbackDisplayName = fallbackDisplayName
         self.authLogger = Logger(subsystem: loggerSubsystem, category: "auth")
     }
@@ -174,7 +180,8 @@ public struct ClerkAccountAVService: AccountAVService {
     private func ensureClerkIsConfigured() {
         AccountAVClerk.configureIfPossible(
             publishableKey: publishableKeyProvider(),
-            bundleIdentifier: Bundle.main.bundleIdentifier
+            bundleIdentifier: Bundle.main.bundleIdentifier,
+            keychainService: keychainServiceProvider()
         )
     }
 
