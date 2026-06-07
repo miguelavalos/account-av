@@ -105,6 +105,13 @@ Use the same launch and runtime pattern in every AV app:
 Product apps should not call Clerk APIs directly, duplicate Account AV buttons,
 or implement separate provider-specific account state machines.
 
+Account AV does not define product branding. App icons, product marks, logo
+lockups, native launch screens, splash artwork, onboarding artwork, Avi product
+poses, paywall presentation, and footer/shell composition belong to Apps AV and
+the individual product app. New product apps should follow the shared Apps AV
+Apple product app pattern, then approve product-specific assets in that app's
+own public/private handoff.
+
 Unsigned simulator builds are suitable for compile-only checks, but they are not
 valid Account AV sign-in smokes. Apple, Google, token, Keychain, and account
 state tests need a signed simulator install so Keychain entitlements are
