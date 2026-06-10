@@ -14,11 +14,12 @@ public protocol AccountAVService {
 
 public extension AccountAVService {
     func restoreSession() async -> AccountAVSessionRestoreResult {
-        guard let user = providerSessionUser else { return .signedOut }
+        let user = providerSessionUser
         do {
             guard let token = try await getToken(), !token.isEmpty else {
                 return .temporarilyUnavailable(user)
             }
+            guard let user else { return .temporarilyUnavailable(nil) }
             return .active(user)
         } catch {
             return .temporarilyUnavailable(user)

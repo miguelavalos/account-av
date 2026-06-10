@@ -1,9 +1,15 @@
 import Foundation
 
 public enum AccountAVSessionRestoreResult: Equatable, Sendable {
+    /// No persisted provider session is known after the provider is available.
     case signedOut
+    /// The provider has an active session and provider metadata.
     case active(AccountAVUser)
+    /// The provider, keychain, token refresh, or session metadata is not
+    /// available right now. Product apps must not treat this as manual logout.
     case temporarilyUnavailable(AccountAVUser?)
+    /// The provider explicitly invalidated the session. Product apps should
+    /// still own product-account cleanup semantics.
     case invalidated
 }
 

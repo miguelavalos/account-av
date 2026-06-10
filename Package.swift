@@ -23,6 +23,10 @@ let package = Package(
             dependencies: [
                 .product(name: "ClerkKit", package: "clerk-ios")
             ]
+        ),
+        .testTarget(
+            name: "AccountAVTests",
+            dependencies: ["AccountAV"]
         )
     ]
 )

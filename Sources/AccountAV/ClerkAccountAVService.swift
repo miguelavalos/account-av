@@ -65,12 +65,12 @@ public struct ClerkAccountAVService: AccountAVService {
     }
 
     public func restoreSession() async -> AccountAVSessionRestoreResult {
-        guard isAvailable else { return .signedOut }
+        guard isAvailable else { return .temporarilyUnavailable(providerSessionUser) }
         ensureClerkIsConfigured()
 
         do {
             if let token = try await activeSessionToken(), !token.isEmpty {
-                return providerSessionUser.map(AccountAVSessionRestoreResult.active) ?? .signedOut
+                return providerSessionUser.map(AccountAVSessionRestoreResult.active) ?? .temporarilyUnavailable(nil)
             }
         } catch {
             return .temporarilyUnavailable(providerSessionUser)
@@ -84,7 +84,7 @@ public struct ClerkAccountAVService: AccountAVService {
 
         do {
             if let token = try await activeSessionToken(), !token.isEmpty {
-                return providerSessionUser.map(AccountAVSessionRestoreResult.active) ?? .signedOut
+                return providerSessionUser.map(AccountAVSessionRestoreResult.active) ?? .temporarilyUnavailable(nil)
             }
         } catch {
             return .temporarilyUnavailable(providerSessionUser)
@@ -100,7 +100,7 @@ public struct ClerkAccountAVService: AccountAVService {
             try await Clerk.shared.auth.setActive(sessionId: fallbackSession.id)
             _ = try? await Clerk.shared.refreshClient()
             if let token = try await activeSessionToken(), !token.isEmpty {
-                return providerSessionUser.map(AccountAVSessionRestoreResult.active) ?? .signedOut
+                return providerSessionUser.map(AccountAVSessionRestoreResult.active) ?? .temporarilyUnavailable(nil)
             }
             return .temporarilyUnavailable(providerSessionUser)
         } catch {
