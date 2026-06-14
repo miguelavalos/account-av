@@ -39,17 +39,20 @@ public enum AccountAVClerk {
 public struct ClerkAccountAVService: AccountAVService {
     private let publishableKeyProvider: () -> String
     private let keychainServiceProvider: () -> String?
+    private let keychainAccessGroupProvider: () -> String?
     private let fallbackDisplayName: String
     private let authLogger: Logger
 
     public init(
         publishableKeyProvider: @escaping () -> String,
         keychainServiceProvider: @escaping () -> String? = { nil },
+        keychainAccessGroupProvider: @escaping () -> String? = { nil },
         fallbackDisplayName: String,
         loggerSubsystem: String = "com.avalsys.accountav"
     ) {
         self.publishableKeyProvider = publishableKeyProvider
         self.keychainServiceProvider = keychainServiceProvider
+        self.keychainAccessGroupProvider = keychainAccessGroupProvider
         self.fallbackDisplayName = fallbackDisplayName
         self.authLogger = Logger(subsystem: loggerSubsystem, category: "auth")
     }
@@ -181,7 +184,8 @@ public struct ClerkAccountAVService: AccountAVService {
         AccountAVClerk.configureIfPossible(
             publishableKey: publishableKeyProvider(),
             bundleIdentifier: Bundle.main.bundleIdentifier,
-            keychainService: keychainServiceProvider()
+            keychainService: keychainServiceProvider(),
+            keychainAccessGroup: keychainAccessGroupProvider()
         )
     }
 

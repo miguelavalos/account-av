@@ -40,12 +40,14 @@ import AccountAV
 AccountAVClerk.configureIfPossible(publishableKey: publishableKey)
 ```
 
-Apps that need explicit Clerk redirect or keychain settings can pass their bundle identifier and access group:
+Apps that need explicit Clerk redirect or keychain settings can pass their
+bundle identifier, keychain service, and access group:
 
 ```swift
 AccountAVClerk.configureIfPossible(
     publishableKey: publishableKey,
     bundleIdentifier: Bundle.main.bundleIdentifier,
+    keychainService: keychainService,
     keychainAccessGroup: keychainAccessGroup
 )
 ```
@@ -55,6 +57,8 @@ Create a service:
 ```swift
 let accountService = ClerkAccountAVService(
     publishableKeyProvider: { publishableKey },
+    keychainServiceProvider: { keychainService },
+    keychainAccessGroupProvider: { keychainAccessGroup },
     fallbackDisplayName: "Account AV user",
     loggerSubsystem: "com.example.app"
 )
