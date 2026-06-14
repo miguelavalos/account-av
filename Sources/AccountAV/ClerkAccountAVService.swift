@@ -154,11 +154,24 @@ public struct ClerkAccountAVService: AccountAVService {
         guard isAvailable else { throw AccountAVError.unavailable }
         ensureClerkIsConfigured()
         try await ensureClerkIsReady()
+        guard try await restoreExistingSessionIfPossible() == false else { return }
         authLogger.info("Starting Apple sign-in")
         #if os(iOS)
-        let result = try await Clerk.shared.auth.signInWithApple()
+        let result: TransferFlowResult
+        do {
+            result = try await Clerk.shared.auth.signInWithApple()
+        } catch {
+            guard try await recoverExistingSessionIfAlreadySignedIn(error) else { throw error }
+            return
+        }
         #else
-        let result = try await Clerk.shared.auth.signInWithOAuth(provider: .apple)
+        let result: TransferFlowResult
+        do {
+            result = try await Clerk.shared.auth.signInWithOAuth(provider: .apple)
+        } catch {
+            guard try await recoverExistingSessionIfAlreadySignedIn(error) else { throw error }
+            return
+        }
         #endif
         authLogger.info("Apple sign-in returned transfer result")
         try await activateSession(from: result)
@@ -168,8 +181,15 @@ public struct ClerkAccountAVService: AccountAVService {
         guard isAvailable else { throw AccountAVError.unavailable }
         ensureClerkIsConfigured()
         try await ensureClerkIsReady()
+        guard try await restoreExistingSessionIfPossible() == false else { return }
         authLogger.info("Starting Google sign-in")
-        let result = try await Clerk.shared.auth.signInWithOAuth(provider: .google)
+        let result: TransferFlowResult
+        do {
+            result = try await Clerk.shared.auth.signInWithOAuth(provider: .google)
+        } catch {
+            guard try await recoverExistingSessionIfAlreadySignedIn(error) else { throw error }
+            return
+        }
         authLogger.info("Google sign-in returned transfer result")
         try await activateSession(from: result)
     }
@@ -221,6 +241,29 @@ public struct ClerkAccountAVService: AccountAVService {
         authLogger.info("Clerk session activated")
     }
 
+    private func restoreExistingSessionIfPossible() async throws -> Bool {
+        if let token = try await activeSessionToken(), !token.isEmpty {
+            authLogger.info("Skipping OAuth because Clerk already has an active session")
+            return true
+        }
+
+        guard let fallbackSession = Clerk.shared.auth.sessions.first else { return false }
+        authLogger.info("Activating persisted Clerk session instead of starting OAuth")
+        try await Clerk.shared.auth.setActive(sessionId: fallbackSession.id)
+        try await Clerk.shared.refreshClient()
+        return (try await activeSessionToken())?.isEmpty == false
+    }
+
+    private func recoverExistingSessionIfAlreadySignedIn(_ error: Error) async throws -> Bool {
+        guard error.isClerkAlreadySignedInError else { return false }
+        authLogger.info("Recovering from already signed-in Clerk response")
+        if try await restoreExistingSessionIfPossible() {
+            return true
+        }
+        try await Clerk.shared.refreshClient()
+        return (try await activeSessionToken())?.isEmpty == false
+    }
+
     private func ensureClerkIsReady() async throws {
         guard !Clerk.shared.isLoaded else { return }
         authLogger.info("Refreshing Clerk client before sign-in")
@@ -231,5 +274,30 @@ public struct ClerkAccountAVService: AccountAVService {
 
     private func activeSessionToken() async throws -> String? {
         try await Clerk.shared.session?.getToken()
+    }
+}
+
+private extension Error {
+    var isClerkAlreadySignedInError: Bool {
+        let nsError = self as NSError
+        let description = [
+            nsError.localizedDescription,
+            String(describing: self),
+            nsError.userInfo.description
+        ]
+            .joined(separator: " ")
+            .lowercased()
+
+        if description.contains("already signed in") ||
+            description.contains("already signed-in") ||
+            description.contains("already signedin") {
+            return true
+        }
+
+        if let underlying = nsError.userInfo[NSUnderlyingErrorKey] as? Error {
+            return underlying.isClerkAlreadySignedInError
+        }
+
+        return false
     }
 }
