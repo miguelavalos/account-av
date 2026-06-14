@@ -23,6 +23,7 @@ flow from this public repo.
 
 - `private/avalsys-suite/docs/platform/native-preview-dev-validation-guide.md`
 - `private/avalsys-suite/docs/platform/native-account-identity-contract.md`
+- `private/avalsys-suite/docs/platform/account-av-ios-testflight-contract.md`
 - `private/avalsys-suite/docs/agents/plan-step.md` when the user says
   `usa plan-step` or asks for step-by-step plan execution.
 - `private/avalsys-suite/docs/agents/plan-goal.md` when the user says
@@ -41,6 +42,9 @@ Mandatory rules:
 - do not use `wrangler dev` or another local Worker as product app backend;
 - use Infisical/Varlock-backed private tooling for config, deploy keys, and
   secret resolution;
+- keep Account AV iOS keychain configuration provider-neutral and compatible
+  with the Tune AV contract: publishable key, keychain service, and keychain
+  access group must be accepted by the shared Clerk wrapper;
 - keep private URLs, service identifiers, approval status, and operations
   evidence out of this public repo.
 
