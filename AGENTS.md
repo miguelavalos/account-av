@@ -1,5 +1,17 @@
 # Account AV Agent Rules
 
+Before work that touches signed runtime, backend-owned identity, billing,
+deletion, deployment, TestFlight/App Store, Convex, Cloudflare remote state, or
+cross-app workflow behavior, run the private workspace preflight first:
+
+```bash
+bash ../../private/avalsys-suite/scripts/agent-preflight.sh --app account-av --intent <intent>
+```
+
+Read `../../private/avalsys-suite/docs/agents/workspace-guardrails.md` and every doc
+printed by the preflight before executing commands. If the private repo is
+unavailable, stop instead of guessing.
+
 Account AV is the shared native authentication package for AV product apps. It
 does not define product ownership, credits, subscriptions, Convex documents,
 D1 rows, R2 keys, or analytics identity by itself.
