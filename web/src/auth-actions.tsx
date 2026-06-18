@@ -1,4 +1,5 @@
 import { SignIn, SignInButton, SignOutButton, UserButton } from "@clerk/tanstack-react-start";
+import type { ComponentProps } from "react";
 import type { ReactNode } from "react";
 
 export interface AccountSignInButtonProps {
@@ -11,13 +12,14 @@ export function AccountSignInButton({ children, mode = "modal" }: AccountSignInB
 }
 
 export interface AccountSignInProps {
+  appearance?: ComponentProps<typeof SignIn>["appearance"];
   fallbackRedirectUrl?: string;
   path: string;
   signUpUrl?: string;
 }
 
-export function AccountSignIn({ fallbackRedirectUrl = "/", path, signUpUrl }: AccountSignInProps) {
-  return <SignIn fallbackRedirectUrl={fallbackRedirectUrl} path={path} routing="path" signUpUrl={signUpUrl} />;
+export function AccountSignIn({ appearance, fallbackRedirectUrl = "/", path, signUpUrl }: AccountSignInProps) {
+  return <SignIn appearance={appearance} fallbackRedirectUrl={fallbackRedirectUrl} path={path} routing="path" signUpUrl={signUpUrl} />;
 }
 
 export function AccountSignOutButton({ children }: { children: ReactNode }) {
