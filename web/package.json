@@ -1,0 +1,16 @@
+{
+  "name": "@avalsys/account-av-web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@clerk/tanstack-react-start": "^1.4.4"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.101.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  }
+}
