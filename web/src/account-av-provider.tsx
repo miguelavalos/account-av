@@ -1,5 +1,6 @@
 import { ClerkProvider, useAuth, useUser } from "@clerk/tanstack-react-start";
 import { useQuery } from "@tanstack/react-query";
+import type { ComponentProps } from "react";
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";
 import { AccountAvApiClient } from "./account-api-client";
@@ -14,24 +15,26 @@ const AccountAvContext = createContext<AccountAvContextValue | null>(null);
 
 export interface AccountAvProviderProps extends AccountAvConfig {
   children: ReactNode;
+  localization?: ComponentProps<typeof ClerkProvider>["localization"];
 }
 
-export function AccountAvProvider({ accountApiBaseUrl, afterSignOutUrl, appDisplayName, appId, children, publishableKey, signInUrl, signUpUrl }: AccountAvProviderProps) {
+export function AccountAvProvider({ accountApiBaseUrl, afterSignOutUrl, appDisplayName, appId, children, localization, publishableKey, signInUrl, signUpUrl }: AccountAvProviderProps) {
+  const defaultLocalization =
+    appDisplayName
+      ? {
+          signIn: {
+            start: {
+              title: `Sign in to ${appDisplayName}`,
+              subtitle: "Welcome back. Please sign in to continue."
+            }
+          }
+        }
+      : undefined;
+
   return (
     <ClerkProvider
       afterSignOutUrl={afterSignOutUrl}
-      localization={
-        appDisplayName
-          ? {
-              signIn: {
-                start: {
-                  title: `Sign in to ${appDisplayName}`,
-                  subtitle: "Welcome back. Please sign in to continue."
-                }
-              }
-            }
-          : undefined
-      }
+      localization={localization ?? defaultLocalization}
       publishableKey={publishableKey}
       signInUrl={signInUrl}
       signUpUrl={signUpUrl}
