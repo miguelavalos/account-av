@@ -57,7 +57,6 @@ export interface AccountAvConfig {
   afterSignOutUrl?: string;
   appId: AccountAvAppId;
   appDisplayName?: string;
-  localization?: unknown;
   publishableKey: string;
   signInUrl?: string;
   signUpUrl?: string;
