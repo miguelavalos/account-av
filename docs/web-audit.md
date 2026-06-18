@@ -16,6 +16,10 @@ Account AV user-facing web was checked as part of the AV web visual audit.
 - Desktop and mobile browser QA passed.
 - Signed-in account, apps, billing, danger-zone, and deletion flows rendered
   correctly where a session was available.
+- Production signed-in QA later confirmed Account AV accepts the shared
+  `?lang` URL contract, renders Catalan UI with `html lang="ca"`, preserves
+  active language on account navigation, and treats `/sign-in` as a real
+  signed-in entry instead of a not-found route.
 - The final pass localized known account-deletion warning details in the
   user-facing Danger Zone, including linked apps, AI credits, Pro access, and
   billing warnings.
