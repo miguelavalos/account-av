@@ -100,6 +100,9 @@ Use the same launch and runtime pattern in every AV app:
 - derive the redirect URI from the bundle identifier as
   `<bundle-id>://callback`;
 - register the callback URL scheme as `$(PRODUCT_BUNDLE_IDENTIFIER)`;
+- add the Associated Domains entitlement required by Clerk Native API, using
+  `webcredentials:<frontend-api-domain>` for the configured Clerk frontend API
+  domain;
 - keep Sign in with Apple and Keychain entitlements aligned with the bundle id;
 - after OAuth, read `providerSessionUser` only as provider session evidence, call
   `getToken()`, resolve `/v1/me`, then update local account state with the

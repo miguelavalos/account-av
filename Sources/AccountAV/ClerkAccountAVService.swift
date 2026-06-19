@@ -161,6 +161,7 @@ public struct ClerkAccountAVService: AccountAVService {
         do {
             result = try await Clerk.shared.auth.signInWithApple()
         } catch {
+            logSignInError(error, provider: "apple")
             guard try await recoverExistingSessionIfAlreadySignedIn(error) else { throw error }
             return
         }
@@ -169,6 +170,7 @@ public struct ClerkAccountAVService: AccountAVService {
         do {
             result = try await Clerk.shared.auth.signInWithOAuth(provider: .apple)
         } catch {
+            logSignInError(error, provider: "apple")
             guard try await recoverExistingSessionIfAlreadySignedIn(error) else { throw error }
             return
         }
@@ -187,6 +189,7 @@ public struct ClerkAccountAVService: AccountAVService {
         do {
             result = try await Clerk.shared.auth.signInWithOAuth(provider: .google)
         } catch {
+            logSignInError(error, provider: "google")
             guard try await recoverExistingSessionIfAlreadySignedIn(error) else { throw error }
             return
         }
@@ -262,6 +265,16 @@ public struct ClerkAccountAVService: AccountAVService {
         }
         try await Clerk.shared.refreshClient()
         return (try await activeSessionToken())?.isEmpty == false
+    }
+
+    private func logSignInError(_ error: Error, provider: String) {
+        let nsError = error as NSError
+        let underlyingError = nsError.userInfo[NSUnderlyingErrorKey] as? NSError
+        let underlyingDomain = underlyingError?.domain ?? "none"
+        let underlyingCode = underlyingError?.code ?? 0
+        authLogger.error(
+            "Clerk \(provider, privacy: .public) sign-in failed domain=\(nsError.domain, privacy: .public) code=\(nsError.code, privacy: .public) underlying_domain=\(underlyingDomain, privacy: .public) underlying_code=\(underlyingCode, privacy: .public) description=\(nsError.localizedDescription, privacy: .private)"
+        )
     }
 
     private func ensureClerkIsReady() async throws {
