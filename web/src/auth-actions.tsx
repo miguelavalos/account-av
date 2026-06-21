@@ -1,4 +1,4 @@
-import { SignIn, SignInButton, SignOutButton, UserButton } from "@clerk/tanstack-react-start";
+import { SignIn, SignInButton, SignOutButton } from "@clerk/tanstack-react-start";
 import type { ComponentProps } from "react";
 import type { ReactNode } from "react";
 
@@ -26,6 +26,19 @@ export function AccountSignOutButton({ children }: { children: ReactNode }) {
   return <SignOutButton>{children}</SignOutButton>;
 }
 
-export function AccountUserButton() {
-  return <UserButton />;
+export interface AccountUserButtonProps {
+  href?: string;
+  label?: string;
+}
+
+export function AccountUserButton({ href = "/account", label = "Account" }: AccountUserButtonProps) {
+  return (
+    <a
+      aria-label={label}
+      className="inline-flex h-9 items-center rounded-full border border-border bg-background px-3 text-sm font-semibold text-foreground transition hover:bg-muted"
+      href={href}
+    >
+      {label}
+    </a>
+  );
 }
