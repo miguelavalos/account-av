@@ -89,7 +89,7 @@ export function useAccountUser() {
   return useQuery<AccountAvUser>({
     enabled: Boolean(session.isLoaded && session.isSignedIn),
     queryFn: () => client.getMe(),
-    queryKey: ["account-av", "me", user.user?.id]
+    queryKey: ["account-av", "me", session.userId, session.sessionId, user.user?.id]
   });
 }
 
@@ -100,7 +100,7 @@ export function useAccountAccess() {
   return useQuery<AccountAvAccessResponse>({
     enabled: Boolean(session.isLoaded && session.isSignedIn),
     queryFn: () => client.getAccess(),
-    queryKey: ["account-av", "access"]
+    queryKey: ["account-av", "access", session.userId, session.sessionId]
   });
 }
 
@@ -111,6 +111,6 @@ export function useAccountAppAccess(appId: AccountAvAppId) {
   return useQuery<AccountAvAppAccess | null>({
     enabled: Boolean(session.isLoaded && session.isSignedIn),
     queryFn: () => client.getAppAccess(appId),
-    queryKey: ["account-av", "access", appId]
+    queryKey: ["account-av", "access", appId, session.userId, session.sessionId]
   });
 }
