@@ -89,7 +89,10 @@ export function useAccountUser() {
   return useQuery<AccountAvUser>({
     enabled: Boolean(session.isLoaded && session.isSignedIn),
     queryFn: () => client.getMe(),
-    queryKey: ["account-av", "me", session.userId, session.sessionId, user.user?.id]
+    queryKey: ["account-av", "me", session.userId, session.sessionId, user.user?.id],
+    refetchOnMount: "always",
+    refetchOnReconnect: "always",
+    refetchOnWindowFocus: "always"
   });
 }
 
@@ -100,7 +103,10 @@ export function useAccountAccess() {
   return useQuery<AccountAvAccessResponse>({
     enabled: Boolean(session.isLoaded && session.isSignedIn),
     queryFn: () => client.getAccess(),
-    queryKey: ["account-av", "access", session.userId, session.sessionId]
+    queryKey: ["account-av", "access", session.userId, session.sessionId],
+    refetchOnMount: "always",
+    refetchOnReconnect: "always",
+    refetchOnWindowFocus: "always"
   });
 }
 
@@ -111,6 +117,9 @@ export function useAccountAppAccess(appId: AccountAvAppId) {
   return useQuery<AccountAvAppAccess | null>({
     enabled: Boolean(session.isLoaded && session.isSignedIn),
     queryFn: () => client.getAppAccess(appId),
-    queryKey: ["account-av", "access", appId, session.userId, session.sessionId]
+    queryKey: ["account-av", "access", appId, session.userId, session.sessionId],
+    refetchOnMount: "always",
+    refetchOnReconnect: "always",
+    refetchOnWindowFocus: "always"
   });
 }
