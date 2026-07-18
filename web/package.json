@@ -20,7 +20,7 @@
     }
   },
   "dependencies": {
-    "@clerk/clerk-react": "^5.0.0",
+    "@clerk/react": "6.10.1",
     "@clerk/tanstack-react-start": "^1.4.4"
   },
   "peerDependencies": {

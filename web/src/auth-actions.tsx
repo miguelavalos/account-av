@@ -1,4 +1,4 @@
-import { SignIn, SignInButton, SignOutButton } from "@clerk/clerk-react";
+import { SignIn, SignInButton, SignOutButton } from "@clerk/react";
 import type { ComponentProps } from "react";
 import type { ReactNode } from "react";
 

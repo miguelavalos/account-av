@@ -1,4 +1,4 @@
-import { ClerkProvider, useAuth, useUser } from "@clerk/clerk-react";
+import { ClerkProvider, useAuth, useUser } from "@clerk/react";
 import { useQuery } from "@tanstack/react-query";
 import type { ComponentProps } from "react";
 import type { ReactNode } from "react";
