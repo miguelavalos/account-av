@@ -4,7 +4,7 @@ export interface AccountAvUser {
   displayName?: string | null;
 }
 
-export type AccountAvAppId = "tuneav" | "seriesav" | "momentsav" | "animateav" | "avapps";
+export type AccountAvAppId = "tuneav" | "seriesav" | "momentsav" | "animateav" | "autonomoav" | "duelwordsav" | "avapps";
 
 export type AccountAvAccessMode = "guest" | "signedInFree" | "signedInPro";
 
