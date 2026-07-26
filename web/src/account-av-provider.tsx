@@ -2,7 +2,7 @@ import { ClerkProvider, useAuth, useUser } from "@clerk/react";
 import { useQuery } from "@tanstack/react-query";
 import type { ComponentProps } from "react";
 import type { ReactNode } from "react";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { AccountAvApiClient } from "./account-api-client";
 import type { AccountAvAccessResponse, AccountAvAppAccess, AccountAvAppId, AccountAvConfig, AccountAvUser } from "./types";
 
@@ -48,13 +48,17 @@ export function AccountAvProvider({ accountApiBaseUrl, afterSignOutUrl, appDispl
 
 function AccountAvRuntimeProvider({ accountApiBaseUrl, appId, children }: { accountApiBaseUrl: string; appId: AccountAvAppId; children: ReactNode }) {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
+  useEffect(() => {
+    getTokenRef.current = getToken;
+  }, [getToken]);
+  const tokenProvider = useCallback(() => getTokenRef.current(), []);
   const value = useMemo(() => {
-    const tokenProvider = () => getToken();
     return {
       client: new AccountAvApiClient(accountApiBaseUrl, appId, tokenProvider),
       getToken: tokenProvider
     };
-  }, [accountApiBaseUrl, appId, getToken]);
+  }, [accountApiBaseUrl, appId, tokenProvider]);
 
   return <AccountAvContext.Provider value={value}>{children}</AccountAvContext.Provider>;
 }

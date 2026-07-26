@@ -1,5 +1,17 @@
 # Account AV
 
+## Request lifecycle
+
+The shared React provider exposes a stable token callback and API client even
+when Clerk replaces its `getToken` function during a rerender. Consumers must
+key automatic account/access reads by meaningful session state, never by the
+identity of a provider SDK function. This prevents a successful account update
+from rearming the same request loop.
+
+`@clerk/shared` is intentionally pinned alongside Clerk React to keep the
+cross-repository source-linked type graph on the compatible Clerk generation;
+it is not an accidental unused runtime dependency.
+
 Shared Swift package for Account AV authentication in AV apps.
 
 `AccountAV` wraps the Clerk native SDK behind a small app-facing API used by Tune AV, Series AV, and future AV apps. It centralizes the account flow so each app can keep its own product logic, branding, and access rules while sharing the same sign-in behavior.

@@ -51,6 +51,9 @@ Mandatory rules:
 - keep Account AV iOS keychain configuration provider-neutral and compatible
   with the Tune AV contract: publishable key, keychain service, and keychain
   access group must be accepted by the shared Clerk wrapper;
+- treat provider hook functions such as Clerk `getToken` as unstable references:
+  keep the latest function behind a ref and expose a stable callback so a
+  provider rerender cannot recreate API clients or restart automatic requests;
 - keep private URLs, service identifiers, approval status, and operations
   evidence out of this public repo.
 
