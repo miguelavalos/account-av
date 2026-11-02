@@ -46,6 +46,10 @@ Mandatory rules:
 - use Convex cloud `dev`, not local Convex, when a native app workflow depends
   on Convex-backed state;
 - do not use `wrangler dev` or another local Worker as product app backend;
+- Infisical is the owner's and read-only for agents: never create, change
+  or delete a value there by any means; tell the owner the name,
+  environment and reason and the owner does it by hand ("Infisical" in
+  `project-bootstrap/docs/WORKING_RULES.md`);
 - use Infisical/Varlock-backed private tooling for config, deploy keys, and
   secret resolution;
 - keep Account AV iOS keychain configuration provider-neutral and compatible
