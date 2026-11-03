@@ -63,3 +63,18 @@ Mandatory rules:
 
 If the private repo is unavailable, stop and say that the authoritative runbook
 cannot be checked. Do not substitute a guessed local workflow.
+
+## Verification
+
+Run `swift test` once before opening a pull request. It is the command behind
+the required check "Test Swift package" in `.github/workflows/ci.yml`. The
+full suite on the CI runner and release builds belong to CI and to the
+required checks; do not repeat them locally unless the change needs it.
+
+## Review
+
+The independent review that sets the `agent-review` status follows
+[`project-bootstrap/docs/REVIEW.md`](https://github.com/miguelavalos/project-bootstrap/blob/main/docs/REVIEW.md)
+(`~/github/project-bootstrap/docs/REVIEW.md` on agent machines). The reviewer
+is a fresh agent that did not write the change. Its review comment starts with
+`PASS` or `BLOCK`.
